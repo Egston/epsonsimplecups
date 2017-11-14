@@ -127,8 +127,6 @@ struct settings_ {
 
     int marginReductionType;
 
-    int bytesPerScanLine;
-    int bytesPerScanLineStd;
     int doubleMode;
     int drawerKick;
 };
@@ -164,7 +162,6 @@ inline void debugPrintSettings(struct settings_ * settings) {
     fprintf(stderr, "DEBUG: pageCutType = %d\n", settings->pageCutType);
     fprintf(stderr, "DEBUG: docCutType = %d\n", settings->docCutType);
     fprintf(stderr, "DEBUG: marginReductionType = %d\n", settings->marginReductionType);
-    fprintf(stderr, "DEBUG: bytesPerScanLine = %d\n", settings->bytesPerScanLine);
     fprintf(stderr, "DEBUG: doubleMode = %d\n", settings->doubleMode);
 }
 
@@ -300,8 +297,6 @@ inline void initializeSettings(char * commandLineOptionSettings, struct settings
     settings->pageCutType = getOptionChoiceIndex("PageCutType", ppd);
     settings->docCutType = getOptionChoiceIndex("DocCutType", ppd);
     settings->marginReductionType = getOptionChoiceIndex("MarginReductionType", ppd);
-    settings->bytesPerScanLine = 80;
-    settings->bytesPerScanLineStd = 80;
     settings->doubleMode = getOptionChoiceIndex("PixelDoublingType", ppd);
     settings->drawerKick = getOptionChoiceIndex("CashDrawerType", ppd);
 
@@ -384,7 +379,7 @@ int main(int argc, char *argv[]) {
     unsigned char * emptyLinePattern = NULL;
     struct settings_ settings; /* Configuration settings */
 
-    int bytesPerScanline = 0;
+    unsigned int bytesPerScanline = 0;
 
 #ifdef RPMBUILD
     void * libCupsImage = NULL; /* Pointer to libCupsImage library */
@@ -461,21 +456,23 @@ int main(int argc, char *argv[]) {
         if ((header.cupsHeight == 0) || (header.cupsBytesPerLine == 0)) {
             break;
         }
-
-        if (rasterData == NULL) {
-            rasterData = malloc(header.cupsBytesPerLine);
-            if (rasterData == NULL) {
-                CLEANUP;
-                return EXIT_FAILURE;
-
-            }
-        }
+        bytesPerScanline = header.cupsBytesPerLine;
 
         page++;
         fprintf(stderr, "PAGE: %d %d\n", page, header.NumCopies);
 
-        bytesPerScanline = settings.bytesPerScanLine < header.cupsBytesPerLine ?
-                settings.bytesPerScanLine : header.cupsBytesPerLine;
+        rasterData = realloc(rasterData, bytesPerScanline);
+        if (rasterData == NULL) {
+            CLEANUP;
+            return EXIT_FAILURE;
+        }
+
+        emptyLinePattern = realloc(emptyLinePattern, bytesPerScanline);
+        if (emptyLinePattern == NULL) {
+            CLEANUP;
+            return EXIT_FAILURE;
+        }
+        memset(emptyLinePattern, 0, bytesPerScanline);
 
         bs = bufferscan_new(bytesPerScanline, 256, settings.doubleMode, stdout);
         if (!bs) {
@@ -483,16 +480,17 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
 
-        emptyLinePattern = realloc(emptyLinePattern, header.cupsBytesPerLine);
-        memset(emptyLinePattern, 0, header.cupsBytesPerLine);
-
         for (y = 0; y < header.cupsHeight; y++) {
             unsigned bytes;
 
             memset(rasterData, 0, bytesPerScanline);
 
-            if ((bytes = CUPSRASTERREADPIXELS(ras, rasterData, header.cupsBytesPerLine)) < 1) {
+            if ((bytes = CUPSRASTERREADPIXELS(ras, rasterData, bytesPerScanline)) < 1) {
                 break;
+            }
+            if (bytes != bytesPerScanline) {
+                CLEANUP;
+                return EXIT_FAILURE;
             }
 
             if (memcmp(rasterData, emptyLinePattern, bytes) == 0) {

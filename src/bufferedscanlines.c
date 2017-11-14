@@ -33,7 +33,7 @@ static void bufferscan_reset(t_bufferscan *bs) {
     int totalBytes;
 
     if (!bs) return;
-    totalBytes = bs->bytesPerRow * bs->currentRow;
+    totalBytes = bs->bytesPerRow * bs->totalRows;
     bs->currentRow = 0;
     memset(bs->rawData, 0, totalBytes);
 }
@@ -91,7 +91,6 @@ void bufferscan_addline(t_bufferscan *bs, unsigned char *data) {
  */
 void bufferscan_flush(t_bufferscan *bs) {
     int totalBytes;
-    int i;
 
     if (!bs) return;
     if (bs->currentRow == 0) return;
