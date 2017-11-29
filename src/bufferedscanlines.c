@@ -36,6 +36,13 @@ static void bufferscan_reset(t_bufferscan *bs) {
     totalBytes = bs->bytesPerRow * bs->totalRows;
     bs->currentRow = 0;
     memset(bs->rawData, 0, totalBytes);
+
+    fprintf(
+        stderr,
+        "DEBUG: Resetting %d buffer's rows (%d bytes)\n",
+        bs->totalRows,
+        totalBytes
+    );
 }
 
 /*
@@ -43,6 +50,14 @@ static void bufferscan_reset(t_bufferscan *bs) {
  * Returns NULL on failure.
  */
 t_bufferscan *bufferscan_new(int bytesperrow, int rows, int outputFlags, FILE *fp) {
+    fprintf(
+        stderr,
+        "DEBUG: Creating new buffer (bytes per row: %d, rows: %d  (%d bytes)\n",
+        bytesperrow,
+        rows,
+        bytesperrow * rows
+    );
+
     t_bufferscan *bs = (t_bufferscan *) malloc(sizeof (t_bufferscan));
     if (!bs) return 0;
 
@@ -65,6 +80,7 @@ t_bufferscan *bufferscan_new(int bytesperrow, int rows, int outputFlags, FILE *f
  * This will not close the associated FILE.
  */
 void bufferscan_dispose(t_bufferscan *bs) {
+    fputs("DEBUG: Disposing buffer\n", stderr);
     if (!bs) return;
     free(bs->rawData);
     free(bs);
@@ -95,6 +111,13 @@ void bufferscan_flush(t_bufferscan *bs) {
     if (!bs) return;
     if (bs->currentRow == 0) return;
     totalBytes = bs->bytesPerRow * bs->currentRow;
+
+    fprintf(
+        stderr,
+        "DEBUG: Flushing buffer with %d rows (%d bytes)\n",
+        bs->currentRow,
+        totalBytes
+    );
 
     /*
      * Image data is represented by a small header block and then a chunk o

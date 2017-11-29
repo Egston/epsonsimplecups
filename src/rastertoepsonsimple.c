@@ -164,6 +164,8 @@ inline void debugPrintSettings(struct settings_ * settings) {
     fprintf(stderr, "DEBUG: docCutType = %d\n", settings->docCutType);
     fprintf(stderr, "DEBUG: marginReductionType = %d\n", settings->marginReductionType);
     fprintf(stderr, "DEBUG: doubleMode = %d\n", settings->doubleMode);
+    fprintf(stderr, "DEBUG: pageWidth = %f\n", settings->pageWidth);
+    fprintf(stderr, "DEBUG: pageHeight = %f\n", settings->pageHeight);
 }
 
 inline void outputCommand(struct command output) {
@@ -309,6 +311,7 @@ inline void initializeSettings(char * commandLineOptionSettings, struct settings
 }
 
 void jobSetup(struct settings_ settings) {
+    fputs("DEBUG: Initializing printer\n", stderr);
     outputCommand(printerInitializeCommand);
 }
 
@@ -316,16 +319,21 @@ void pageSetup(struct settings_ settings, cups_page_header_t header) {
 }
 
 void endPage(struct settings_ settings) {
+    fputs("DEBUG: End of page\n", stderr);
     if (settings.pageCutType) {
+        fputs("DEBUG: Cutting page\n", stderr);
         outputCommand(pageCutCommand);
     }
 }
 
 void endJob(struct settings_ settings) {
+    fputs("DEBUG: End of document\n", stderr);
     if (settings.docCutType) {
+        fputs("DEBUG: Cutting page\n", stderr);
         outputCommand(pageCutCommand);
     }
     if (settings.drawerKick) {
+        fputs("DEBUG: Kicking drawer\n", stderr);
         outputCommand(drawerKickCommand);
     }
 }
@@ -345,6 +353,7 @@ void endJob(struct settings_ settings) {
 #ifdef RPMBUILD
 #define CLEANUP                                                         \
 {                                                                       \
+    fputs("DEBUG: Cleaning up\n", stderr);                              \
     if (rasterData   != NULL) free(rasterData);                         \
     if (emptyLinePattern != NULL) free(emptyLinePattern);               \
     CUPSRASTERCLOSE(ras);                                               \
@@ -358,6 +367,7 @@ void endJob(struct settings_ settings) {
 #else
 #define CLEANUP                                                         \
 {                                                                       \
+    fputs("DEBUG: Cleaning up\n", stderr);                              \
     if (rasterData   != NULL) free(rasterData);                         \
     if (emptyLinePattern != NULL) free(emptyLinePattern);               \
     CUPSRASTERCLOSE(ras);                                               \
@@ -454,6 +464,13 @@ int main(int argc, char *argv[]) {
         int emptyLinesDiscardedCount = 0;
         int insideTopMargin = TRUE;
 
+        fprintf(
+            stderr,
+            "Raster page header: (cupsHeight = %d, cupsBytesPerLine = %d)\n",
+            header.cupsHeight,
+            header.cupsBytesPerLine
+        );
+
         if ((header.cupsHeight == 0) || (header.cupsBytesPerLine == 0)) {
             break;
         }
@@ -538,6 +555,8 @@ int main(int argc, char *argv[]) {
     } else {
         fputs("INFO: Ready to print.\n", stderr);
     }
+
+    fputs("DEBUG: rastertosimple filter finished.\n", stderr);
 
     return (page == 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
