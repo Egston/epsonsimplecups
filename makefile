@@ -1,10 +1,12 @@
 VPATH = src:ppd:bin
 
-DEFS=
+DEFS=-D_FORTIFY_SOURCE=2
 LIBS=-lcupsimage -lcups
+CFLAGS=-Wall -Wextra -Wformat -Wformat-security -fPIC -fPIE -fstack-protector-all -Wstack-protector -O2
+LDFLAGS=-pie -Wl,-rpath,/usr/lib -Wl,-z,relro -Wl,-z,now
 
 ifdef RPMBUILD
-DEFS=-DRPMBUILD
+DEFS=-D_FORTIFY_SOURCE=2 -DRPMBUILD
 LIBS=-ldl
 endif
 
@@ -62,7 +64,7 @@ rastertoepsonsimple: rastertoepsonsimple.c bufferedscanlines.o
 	$(dependencies)
 	$(init)
 	# compiling rastertoepsonsimple filter
-	gcc -Wl,-rpath,/usr/lib -Wall -fPIC -O2 $(DEFS) -o bin/rastertoepsonsimple bufferedscanlines.o src/rastertoepsonsimple.c $(LIBS)
+	gcc $(CFLAGS) $(LDFLAGS) $(DEFS) -o bin/rastertoepsonsimple bufferedscanlines.o src/rastertoepsonsimple.c $(LIBS)
 
 
 setup: setup.sh
