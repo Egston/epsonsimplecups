@@ -114,6 +114,7 @@ static cupsMarkOptions_fndef cupsMarkOptions_fn;
 #endif
 
 #define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
+#define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
 
 #define FALSE 0
 #define TRUE  (!FALSE)
@@ -474,7 +475,12 @@ int main(int argc, char *argv[]) {
         }
         memset(emptyLinePattern, 0, bytesPerScanline);
 
-        bs = bufferscan_new(bytesPerScanline, 256, settings.doubleMode, stdout);
+        bs = bufferscan_new(
+            bytesPerScanline,
+            MIN(header.cupsHeight, 1595), // limited to 200mm, ~128kB
+            settings.doubleMode,
+            stdout
+        );
         if (!bs) {
             CLEANUP;
             return EXIT_FAILURE;
