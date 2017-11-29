@@ -310,12 +310,9 @@ inline void initializeSettings(char * commandLineOptionSettings, struct settings
     debugPrintSettings(settings);
 }
 
-void jobSetup(struct settings_ settings) {
+void jobSetup() {
     fputs("DEBUG: Initializing printer\n", stderr);
     outputCommand(printerInitializeCommand);
-}
-
-void pageSetup(struct settings_ settings, cups_page_header_t header) {
 }
 
 void endPage(struct settings_ settings) {
@@ -456,7 +453,7 @@ int main(int argc, char *argv[]) {
 
     initializeSettings(argv[5], &settings);
 
-    jobSetup(settings);
+    jobSetup();
     ras = CUPSRASTEROPEN(fd, CUPS_RASTER_READ);
 
     page = 0;
