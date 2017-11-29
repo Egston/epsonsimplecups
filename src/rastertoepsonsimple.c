@@ -354,6 +354,7 @@ void endJob(struct settings_ settings) {
 #define CLEANUP                                                         \
 {                                                                       \
     fputs("DEBUG: Cleaning up\n", stderr);                              \
+    outputCommand(printerInitializeCommand);                            \
     if (rasterData   != NULL) free(rasterData);                         \
     if (emptyLinePattern != NULL) free(emptyLinePattern);               \
     CUPSRASTERCLOSE(ras);                                               \
@@ -368,6 +369,7 @@ void endJob(struct settings_ settings) {
 #define CLEANUP                                                         \
 {                                                                       \
     fputs("DEBUG: Cleaning up\n", stderr);                              \
+    outputCommand(printerInitializeCommand);                            \
     if (rasterData   != NULL) free(rasterData);                         \
     if (emptyLinePattern != NULL) free(emptyLinePattern);               \
     CUPSRASTERCLOSE(ras);                                               \
@@ -470,6 +472,8 @@ int main(int argc, char *argv[]) {
             header.cupsHeight,
             header.cupsBytesPerLine
         );
+
+        outputCommand(printerInitializeCommand);
 
         if ((header.cupsHeight == 0) || (header.cupsBytesPerLine == 0)) {
             break;
