@@ -374,7 +374,7 @@ int main(int argc, char *argv[]) {
     cups_page_header2_t header; /* CUPS Page header */
     int page = 0; /* Current page */
 
-    int y = 0; /* Vertical position in page 0 <= y <= header.cupsHeight */
+    unsigned y = 0; /* Vertical position in page 0 <= y <= header.cupsHeight */
 
     unsigned char * rasterData = NULL; /* Pointer to raster data buffer */
     unsigned char * emptyLinePattern = NULL;
